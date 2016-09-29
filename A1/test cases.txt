@@ -1,0 +1,69 @@
+Here are the commands which we tested your proxy server with.
+For curl, it should produce the same result from your proxy
+as the direct connection. Example:
+
+curl -0 www.comp.nus.edu.sg/~cs2105/demo.html > actual
+curl -0 -x localhost:8000 www.comp.nus.edu.sg/~cs2105/demo.html > proxied
+diff actual proxied
+
+diff will output nothing if the files are identical, in which case you
+pass the test case.
+
+Test Cases
+----------
+1. Handling small file and images (2 marks)
+curl -0 www.comp.nus.edu.sg/~cs2105/demo.html (1)
+curl -0 http://www.comp.nus.edu.sg/~cs2105/img/doge.jpg (1)
+
+2. Handling complex webpages (2 marks)
+wget -p www.comp.nus.edu.sg/~cs2105/www.comp.nus.edu.sg (2)
+wget -e use_proxy=yes -e http_proxy=127.0.0.1:8080 -p www.comp.nus.edu.sg/~cs2105/www.comp.nus.edu.sg
+
+wget download the entire site into a directory structure.
+So run wget in two different directories then diff the two directories e.g.:
+diff -r original/www.comp.nus.edu.sg/ proxy/www.comp.nus.edu.sg
+
+3. Handling large file (2 marks)
+curl -0 www.comp.nus.edu.sg/~cs2105/a1/large.mp4 (2)
+The md5sum of large.mp4 should match. Just like in assignment 0.
+
+4. Handling 404 and 502 error messages
+curl -0 www.comp.nus.edu.sg/~cs2105/notfound.html (1)
+curl -0 www.ccc.nus.edu.sg/ (1)
+We check if the correct 502 status code is in the HTTP response.
+
+5. Handle POST
+curl -0 --data "name=Peter&city=Singapore" http://www.w3schools.com/jquery/demo_test_post.asp  (2)
+
+6. Handle custom port
+curl -0 portquiz.net:1234/  (1)
+
+portquiz.net actually sends different contents if it detects that the User-Agent is curl.
+If you are getting the full HTML thru your proxy, then it means you did not forward the headers
+correctly.
+
+7. Normal caching
+We have set up our web server on sunfire on port 8888.
+Now the page "sunfire.comp.nus.edu.sg:8888/cachethis" will always return a random number in the page.
+If your proxy has normal caching, you should get the same contents on subsequent requests thru curl
+curl -0 -x localhost:XXXX sunfire.comp.nus.edu.sg:8888/cachethis
+
+8. Adv caching
+There is another page "sunfire.comp.nus.edu.sg:8888/cachethis" that our web server will serve.
+This page will return a Last-Modified header but never respond with a 304.
+Thus if you have advanced caching, you will see a different number each time.
+But if you only did normal caching, you would have cached it and returned the same contents.
+curl -0 -x localhost:XXXX sunfire.comp.nus.edu.sg:8888/nocache
+
+9. Text censoring
+curl -0 http://www.comp.nus.edu.sg/~cs2105/sherlock.txt
+words in censor.txt: Adler, Watson (1)
+words in censor.txt: quite, then, peculiar (1)
+
+10. Multi-threading
+curl -0 www.comp.nus.edu.sg/~cs2105/a1/large.mp4 +
+curl -0 www.comp.nus.edu.sg/~cs2105/demo.html (2)
+
+Open two windows, and with one request large.mp4 and while large.mp4 is downloading,
+request for demo.html in the other. If your proxy supports multi-threading, then 
+demo.html will be downloaded before large.mp4 completes.
